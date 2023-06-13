@@ -1,37 +1,60 @@
 # PointcloudIO
 
 #### 介绍
-简单的PCD文件读写库，只依赖Eigen，不依赖open3d或者pcl2个庞大的库，目前支持V0.6和V0.7，其它版本尚未测试。支持xyz、intensity、normal、color字段读写
+
+简单的PCD文件读写库，只依赖Eigen，不依赖open3d或者pcl二个庞大的库，目前支持V0.6和V0.7，其它版本尚未测试但应该也支持。支持xyz、intensity、normal、color字段读写。
 
 #### 软件架构
-软件架构说明
 
+跨平台支持 windows、ubuntu
 
 #### 安装教程
 
-1.  修改CMakeLists.txt文件内eigen3引用目录
-2.  在工程目录下执行如下命令
+1. 修改CMakeLists.txt文件内eigen3引用目录
+2. 在工程目录下执行如下命令
 
+```bash
 
-#### 使用说明
+# 编译 
+mkdir build
+cd build
+cmake ..
+make
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+# 执行
+./PointCloudIO
+```
+  
+  ![节点](./PCDIO.png)
 
-#### 参与贡献
+#### 使用
 
-1.  Fork 本仓库
-2.  新建 Feat_xxx 分支
-3.  提交代码
-4.  新建 Pull Request
+1. 引用`PointCloudIO.h`头文件
+2. 生成`PointCloud`点云对象
+3. 调用`pcd::io::ReadPointCloudFromPCD`接口读取
+4. 写PCD文件调用`pcd::io::WritePointCloudToPCD`,需要配置写入明码还是二进制，二进制是否需要压缩,通过`pcd::io::WritePointCloudOption`选项控制
 
+```C++
+#include "PointCloudIO.h"
 
-#### 特技
+int main(int argc, char **argv)
+{
+    //读取PCD
+    auto cloud_ptr = std::make_shared<pcd::geometry::PointCloud>();
+    pcd::io::ReadPointCloudFromPCD("/mnt/d/010734.pcd", *cloud_ptr);
+    fprintf(stderr, "Point count: %ld\n", cloud_ptr->points_.size());
+    for (size_t i = 0; i < cloud_ptr->points_.size(); i++)
+    {
+        /* code */
+        cloud_ptr->intensitys_.at(i) *= 255;
+        Eigen::Vector3d &xyz_ = cloud_ptr->points_.at(i);
+        fprintf(stderr, "Point %ld: [x:%f y:%f z:%f i:%f]\n", i, xyz_[0], xyz_[1], xyz_[1], cloud_ptr->intensitys_.at(i));
+    }
 
-1.  使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2.  Gitee 官方博客 [blog.gitee.com](https://blog.gitee.com)
-3.  你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解 Gitee 上的优秀开源项目
-4.  [GVP](https://gitee.com/gvp) 全称是 Gitee 最有价值开源项目，是综合评定出的优秀开源项目
-5.  Gitee 官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6.  Gitee 封面人物是一档用来展示 Gitee 会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+    //写PCD
+    pcd::io::WritePointCloudOption option_(false, true);
+    pcd::io::WritePointCloudToPCD("/mnt/d/010734-1.pcd", *cloud_ptr, option_);
+
+    return 0;
+}
+```
